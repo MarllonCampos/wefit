@@ -11,7 +11,7 @@ import React, { useContext } from "react";
 import { ColorSchemeName, Pressable, TouchableOpacity } from "react-native";
 
 import Colors from "../constants/Colors";
-import ModalScreen from "../screens/ModalScreen";
+import RepoInfo from "../screens/RepoInfo";
 import NotFoundScreen from "../screens/NotFoundScreen";
 import Repositories from "../screens/RepositoriesScreen";
 import Favorites from "../screens/FavoritesScreen";
@@ -41,7 +41,7 @@ function RootNavigator() {
       <Stack.Group screenOptions={{ presentation: "modal" }}>
         <Stack.Screen
           name="RepoInfo"
-          component={ModalScreen}
+          component={RepoInfo}
           options={{
             title: "Detalhes",
             headerTintColor: "#FFFFFF",

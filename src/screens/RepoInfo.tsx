@@ -12,7 +12,7 @@ import * as Linking from "expo-linking";
 type ParamProps = {
   repoId: string;
 };
-export default function ModalScreen({ navigation }: RootStackScreenProps<"RepoInfo">) {
+export default function RepoInfo({ navigation }: RootStackScreenProps<"RepoInfo">) {
   const route = useRoute();
   const { repoId } = route.params as ParamProps;
   const { findRepoById, isRepoFavorite, toggleFavorite } = useContext(RepoModalContext);
