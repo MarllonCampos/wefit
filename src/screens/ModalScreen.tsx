@@ -1,9 +1,9 @@
 import React, { useContext } from "react";
 import { StatusBar } from "expo-status-bar";
-import { Platform, StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import { Platform, StyleSheet, Text, View, TouchableOpacity, Button } from "react-native";
 import { useRoute } from "@react-navigation/native";
-import { RepoModalContext } from "../context/RepoModalContext";
-import { RootStackParamList } from "../types";
+import { RepoModalContext, RepositoryObject } from "../context/RepoModalContext";
+import { RootStackParamList, RootStackScreenProps, RootTabScreenProps } from "../types";
 import FontFamily from "../constants/FontFamily";
 import { MaterialIcons } from "@expo/vector-icons";
 import Colors from "../constants/Colors";
@@ -12,11 +12,19 @@ import * as Linking from "expo-linking";
 type ParamProps = {
   repoId: string;
 };
-export default function ModalScreen() {
+export default function ModalScreen({ navigation }: RootStackScreenProps<"RepoInfo">) {
   const route = useRoute();
   const { repoId } = route.params as ParamProps;
-  const { findFavoriteById } = useContext(RepoModalContext);
-  const selectedRepo = findFavoriteById(repoId);
+  const { findRepoById, isRepoFavorite, toggleFavorite } = useContext(RepoModalContext);
+  const selectedRepo = findRepoById(repoId);
+
+  if (!selectedRepo) {
+    return (
+      <View style={styles.repoContent}>
+        <Text>Ops!, sentimos muito, porém esse repositório não esta mais disponível</Text>
+      </View>
+    );
+  }
   const checkEmptyDescription =
     selectedRepo && selectedRepo.description ? selectedRepo.description : "Doesn't have a description";
   const checkEmptyLanguage = selectedRepo && selectedRepo.language ? selectedRepo.language : "Non Specified";
@@ -26,6 +34,12 @@ export default function ModalScreen() {
       Linking.openURL(selectedRepo?.html_url);
     }
   }
+  function favoriteButtonPress() {
+    toggleFavorite({ ...selectedRepo } as RepositoryObject);
+    navigation.navigate("Root");
+  }
+
+  const repoFavorite = isRepoFavorite(repoId);
   return (
     <View style={styles.container}>
       <View style={styles.repoContent}>
@@ -46,10 +60,18 @@ export default function ModalScreen() {
           <Text style={styles.seeRepository}>VER REPOSITÓRIO</Text>
           <MaterialIcons name="link" size={24} color={Colors.active} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.favoriteContainer}>
-          <Text style={styles.favoriteText}>Favoritar</Text>
-          <MaterialIcons name="star" size={24} color={Colors.dark87} />
-        </TouchableOpacity>
+
+        {repoFavorite ? (
+          <TouchableOpacity style={styles.unfavoriteContainer} onPress={favoriteButtonPress}>
+            <Text style={styles.unfavoriteText}>Desfavoritar</Text>
+            <MaterialIcons name="star-outline" size={24} color={Colors.dark87} />
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity style={styles.favoriteContainer} onPress={favoriteButtonPress}>
+            <Text style={styles.favoriteText}>Favoritar</Text>
+            <MaterialIcons name="star" size={24} color={Colors.dark87} />
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -124,10 +146,30 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
 
+  unfavoriteContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+    padding: 8,
+    borderRadius: 4,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: Colors.dark87,
+  },
+
   favoriteText: {
     color: Colors.dark87,
     fontFamily: FontFamily.RobotoMedium,
     fontSize: 15,
     marginRight: 8,
+  },
+
+  unfavoriteText: {
+    color: Colors.dark87,
+    fontFamily: FontFamily.RobotoMedium,
+    fontSize: 15,
+    marginRight: 8,
+    textTransform: "uppercase",
   },
 });

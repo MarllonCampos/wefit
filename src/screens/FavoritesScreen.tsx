@@ -11,22 +11,19 @@ import {
   Button,
   FlatList,
 } from "react-native";
-import RepoCard from "../components/RepoCard";
+import FlatListRepositories from "../components/FlatListRepositories";
 import { RepoModalContext } from "../context/RepoModalContext";
 import { RootTabScreenProps } from "../types";
 export default function Favorites({ navigation }: RootTabScreenProps<"Favorites">) {
   const { favorites } = useContext(RepoModalContext);
-  console.log({ favorites });
   return (
     <View style={styles.container}>
-      <FlatList
-        data={favorites}
-        renderItem={({ item: repoCardProps }) => (
-          <RepoCard {...repoCardProps} onPress={() => navigation.navigate("RepoInfo", { repoId: repoCardProps.id })} />
-        )}
-        keyExtractor={(item) => item.id}
-        style={{ width: "100%" }}
-      />
+      {favorites.length === 0 && (
+        <View>
+          <Text>No repositories found</Text>
+        </View>
+      )}
+      <FlatListRepositories data={favorites} onPress={(id) => navigation.navigate("RepoInfo", { repoId: id })} />
     </View>
   );
 }

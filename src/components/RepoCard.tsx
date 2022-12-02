@@ -1,4 +1,4 @@
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 
 import { Text, View, StyleSheet, TouchableOpacity, Image } from "react-native";
 import Colors from "../constants/Colors";
@@ -7,6 +7,7 @@ import { RepoModalContext, RepositoryObject } from "../context/RepoModalContext"
 import { useContext } from "react";
 interface RepoCardProps extends RepositoryObject {
   onPress?: () => void;
+  removeFavorites?: boolean;
 }
 export default function RepoCard({
   description,
@@ -17,14 +18,18 @@ export default function RepoCard({
   name,
   id,
   onPress,
+  removeFavorites,
 }: RepoCardProps) {
   const checkEmptyDescription = description ? description : "Doesn't have a description";
   const checkEmptyLanguage = language ? language : "Non Specified";
-  const { toggleFavorite } = useContext(RepoModalContext);
-  console.log(id);
+  const { toggleFavorite, isRepoFavorite } = useContext(RepoModalContext);
   function favoriteRepository() {
     const repository = { description, language, stargazers_count, owner: { avatar_url, login }, html_url, name, id };
     toggleFavorite(repository);
+  }
+  const repoFavorite = isRepoFavorite(id);
+  if (removeFavorites && repoFavorite) {
+    return <></>;
   }
   return (
     <TouchableOpacity style={styles.container} onPress={onPress}>
@@ -39,12 +44,19 @@ export default function RepoCard({
       <Text style={styles.description}>{checkEmptyDescription}</Text>
 
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.favorite} onPress={favoriteRepository}>
-          <FontAwesome name="star" color={Colors.favorite} size={20} />
-          <Text style={styles.favoriteText}>Favoritar</Text>
-        </TouchableOpacity>
+        {repoFavorite ? (
+          <TouchableOpacity style={styles.unfavorite} onPress={favoriteRepository}>
+            <MaterialIcons name="star-outline" color={Colors.dark87} size={20} />
+            <Text style={styles.unfavoriteText}>Desfavoritar</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity style={styles.favorite} onPress={favoriteRepository}>
+            <MaterialIcons name="star" color={Colors.favorite} size={20} />
+            <Text style={styles.favoriteText}>Favoritar</Text>
+          </TouchableOpacity>
+        )}
 
-        <FontAwesome name="star" color={Colors.favorite} size={20} />
+        <MaterialIcons name="star" color={Colors.favorite} size={20} />
         <Text style={styles.starCount}>{stargazers_count}</Text>
 
         <View style={styles.languageColor} />
@@ -103,6 +115,22 @@ const styles = StyleSheet.create({
   },
   favoriteText: {
     color: Colors.favorite,
+    marginLeft: 10,
+    fontFamily: FontFamily.InterBold,
+    fontSize: 12,
+  },
+  unfavorite: {
+    paddingHorizontal: 8,
+    paddingVertical: 10,
+    marginRight: "auto",
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: Colors.dark87,
+    borderRadius: 4,
+  },
+  unfavoriteText: {
+    color: Colors.dark87,
     marginLeft: 10,
     fontFamily: FontFamily.InterBold,
     fontSize: 12,

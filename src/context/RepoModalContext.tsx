@@ -21,7 +21,8 @@ interface RepoModalContextData {
   favorites: RepositoryObject[];
   setUserRepository: (user: string) => void;
   toggleFavorite: (repository: RepositoryObject) => void;
-  findFavoriteById: (repoId: string) => RepositoryObject | undefined;
+  findRepoById: (repoId: string) => RepositoryObject | undefined;
+  isRepoFavorite: (repoId: string) => boolean;
 }
 
 interface UserProviderProps {
@@ -36,11 +37,12 @@ export function RepoModalProvider({ children }: UserProviderProps) {
 
   const [favorites, setFavorites] = useState([] as RepositoryObject[]);
 
-  const [userRepository, setUserRepository] = useState("marlloncampos");
+  const [userRepository, setUserRepository] = useState("appswefit");
   const [repositories, setRepositories] = useState<RepositoryObject[]>([]);
 
   useEffect(() => {
     getUserRepositories();
+    setIsModalVisible(false);
   }, [userRepository]);
 
   useEffect(() => {
@@ -65,10 +67,14 @@ export function RepoModalProvider({ children }: UserProviderProps) {
     );
   };
 
-  const findFavoriteById = (repoId: string) => favorites.find((favoriteRepo) => favoriteRepo.id === repoId);
+  const findRepoById = (repoId: string) =>
+    repositories.find((favoriteRepo) => favoriteRepo.id === repoId) ||
+    favorites.find((favoriteRepo) => favoriteRepo.id === repoId);
+
+  const isRepoFavorite = (repoId: string): boolean => favorites.some((favoriteRepo) => favoriteRepo.id === repoId);
 
   const getUserRepositories = async () => {
-    const res = await fetch(`https://api.github.com/users/${userRepository}/repos?per_page=15`);
+    const res = await fetch(`https://api.github.com/users/${userRepository}/repos`);
     if (!res.ok || res.status >= 400) {
       const body = await res.json();
       throw body.message;
@@ -87,7 +93,8 @@ export function RepoModalProvider({ children }: UserProviderProps) {
         favorites,
         setUserRepository,
         toggleFavorite,
-        findFavoriteById,
+        findRepoById,
+        isRepoFavorite,
       }}
     >
       {children}

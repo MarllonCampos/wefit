@@ -1,29 +1,14 @@
 import React, { useState, useContext, useCallback, useRef } from "react";
-import {
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-  ActivityIndicator,
-  Platform,
-  TextInput,
-  ScrollView,
-  FlatList,
-  Button,
-} from "react-native";
+import { StyleSheet, Text, View, FlatList } from "react-native";
 import RepoCard from "../components/RepoCard";
 import { RootTabScreenProps } from "../types";
 import Colors from "../constants/Colors";
 import { RepoModalContext, RepositoryObject } from "../context/RepoModalContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import FlatListRepositories from "../components/FlatListRepositories";
 
 export default function Repositories({ navigation }: RootTabScreenProps<"Repositories">) {
   const { setIsModalVisible, repositories, favorites } = useContext(RepoModalContext);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const clearFavs = async () => {
-    await AsyncStorage.removeItem("@wefit:repositories");
-  };
 
   return (
     <View style={styles.container}>
@@ -33,14 +18,11 @@ export default function Repositories({ navigation }: RootTabScreenProps<"Reposit
         </View>
       )}
 
-      <FlatList
+      <FlatListRepositories
         data={repositories}
-        renderItem={({ item: repoCardProps }) => <RepoCard {...repoCardProps} />}
-        keyExtractor={(item) => item.id}
-        style={{ width: "100%" }}
+        onPress={(id) => navigation.navigate("RepoInfo", { repoId: id })}
+        removeFavorites
       />
-
-      {isLoading && <ActivityIndicator size={92} />}
     </View>
   );
 }
