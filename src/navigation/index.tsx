@@ -14,9 +14,10 @@ import Colors from "../constants/Colors";
 import ModalScreen from "../screens/ModalScreen";
 import NotFoundScreen from "../screens/NotFoundScreen";
 import Repositories from "../screens/RepositoriesScreen";
-import TabTwoScreen from "../screens/FavoritesScreen";
+import Favorites from "../screens/FavoritesScreen";
 import { RootStackParamList, RootTabParamList, RootTabScreenProps } from "../types";
 import { RepoModalContext } from "../context/RepoModalContext";
+import FontFamily from "../constants/FontFamily";
 
 export default function Navigation() {
   return (
@@ -38,7 +39,22 @@ function RootNavigator() {
       <Stack.Screen name="Root" component={BottomTabNavigator} options={{ headerShown: false }} />
       <Stack.Screen name="NotFound" component={NotFoundScreen} options={{ title: "Oops!" }} />
       <Stack.Group screenOptions={{ presentation: "modal" }}>
-        <Stack.Screen name="RepoInfo" component={ModalScreen} />
+        <Stack.Screen
+          name="RepoInfo"
+          component={ModalScreen}
+          options={{
+            title: "Detalhes",
+            headerTintColor: "#FFFFFF",
+            headerStyle: {
+              backgroundColor: "#000000",
+            },
+
+            headerTitleStyle: {
+              fontFamily: FontFamily.RobotoMedium,
+              fontSize: 20,
+            },
+          }}
+        />
       </Stack.Group>
     </Stack.Navigator>
   );
@@ -79,7 +95,7 @@ function BottomTabNavigator() {
       />
       <BottomTab.Screen
         name="Favorites"
-        component={TabTwoScreen}
+        component={Favorites}
         options={{
           title: "Favoritos",
           tabBarIcon: ({ color }) => <TabBarIcon name="star" color={color} />,

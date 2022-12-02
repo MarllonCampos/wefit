@@ -1,50 +1,56 @@
 import { FontAwesome } from "@expo/vector-icons";
 
-import { Text, View, StyleSheet, TouchableOpacity } from "react-native";
-import { getFavoriteRepos, saveFavoriteRepo } from "../../utils/asyncStorage";
+import { Text, View, StyleSheet, TouchableOpacity, Image } from "react-native";
 import Colors from "../constants/Colors";
 import FontFamily from "../constants/FontFamily";
-import { RepositoryObject } from "../context/RepoModalContext";
-
-interface RepoCardProps extends RepositoryObject {}
+import { RepoModalContext, RepositoryObject } from "../context/RepoModalContext";
+import { useContext } from "react";
+interface RepoCardProps extends RepositoryObject {
+  onPress?: () => void;
+}
 export default function RepoCard({
   description,
   language,
-  repoName,
-  starCount,
-  user,
+  stargazers_count,
+  owner: { avatar_url, login },
   html_url,
-  ...props
+  name,
+  id,
+  onPress,
 }: RepoCardProps) {
   const checkEmptyDescription = description ? description : "Doesn't have a description";
   const checkEmptyLanguage = language ? language : "Non Specified";
-
-  const checkFavorite = async () => {
-    const favoriteRepos = await getFavoriteRepos();
-
-    return favoriteRepos.some(({ html_url: favoriteHtmlUrl }) => html_url === favoriteHtmlUrl);
-  };
+  const { toggleFavorite } = useContext(RepoModalContext);
+  console.log(id);
+  function favoriteRepository() {
+    const repository = { description, language, stargazers_count, owner: { avatar_url, login }, html_url, name, id };
+    toggleFavorite(repository);
+  }
   return (
-    <View style={styles.container}>
-      <Text style={styles.repoName}>
-        {user}/<Text style={styles.title}>{repoName}</Text>
-      </Text>
+    <TouchableOpacity style={styles.container} onPress={onPress}>
+      <View style={styles.header}>
+        <Text style={styles.repoName}>
+          {login}/<Text style={styles.title}>{name}</Text>
+        </Text>
+
+        <Image source={{ uri: avatar_url }} style={{ width: 29, height: 29, borderRadius: 29, marginLeft: "auto" }} />
+      </View>
       <View style={styles.separator} />
       <Text style={styles.description}>{checkEmptyDescription}</Text>
 
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.favorite}>
+        <TouchableOpacity style={styles.favorite} onPress={favoriteRepository}>
           <FontAwesome name="star" color={Colors.favorite} size={20} />
           <Text style={styles.favoriteText}>Favoritar</Text>
         </TouchableOpacity>
 
         <FontAwesome name="star" color={Colors.favorite} size={20} />
-        <Text style={styles.starCount}>{starCount}</Text>
+        <Text style={styles.starCount}>{stargazers_count}</Text>
 
         <View style={styles.languageColor} />
         <Text style={styles.language}>{checkEmptyLanguage}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -55,6 +61,10 @@ const styles = StyleSheet.create({
     width: "100%",
     borderRadius: 4,
     marginBottom: 16,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   repoName: {
     fontFamily: FontFamily.InterRegular,

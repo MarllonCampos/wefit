@@ -1,22 +1,27 @@
-import { createContext, useState, useEffect, ReactNode } from "react";
-import { saveFavoriteRepo } from "../../utils/asyncStorage";
-// import { getUser, logoutUser } from "../utils/asyncStorage";
+import React, { useState, useContext, useCallback, useRef, createContext, ReactNode, useEffect } from "react";
+
+import { getFavoriteRepos, saveFavoriteRepo } from "../../utils/asyncStorage";
+import ChangeUserRepositoryModal from "../components/ChangeUserRepositoryModal";
 
 export type RepositoryObject = {
-  repoName: string;
-  user: string;
-  avatar_url: string;
-  html_url: string;
+  id: string;
+  name: string;
+  owner: { login: string; avatar_url: string };
   description: string;
   language: string;
-  starCount: string | number;
+  stargazers_count: number;
+  html_url: string;
+  favorite?: boolean;
 };
 
 interface RepoModalContextData {
   setIsModalVisible: (any: any) => void;
   modalIsVisible: boolean;
   repositories: RepositoryObject[];
-  getUserRepositories: (user: string) => Promise<void>;
+  favorites: RepositoryObject[];
+  setUserRepository: (user: string) => void;
+  toggleFavorite: (repository: RepositoryObject) => void;
+  findFavoriteById: (repoId: string) => RepositoryObject | undefined;
 }
 
 interface UserProviderProps {
@@ -28,29 +33,49 @@ export const RepoModalContext = createContext({} as RepoModalContextData);
 export function RepoModalProvider({ children }: UserProviderProps) {
   const defaultUser = { username: "", balance: 0 };
   const [modalIsVisible, setIsModalVisible] = useState(false);
+
+  const [favorites, setFavorites] = useState([] as RepositoryObject[]);
+
+  const [userRepository, setUserRepository] = useState("marlloncampos");
   const [repositories, setRepositories] = useState<RepositoryObject[]>([]);
 
-  const getUserRepositories = async (user: string) => {
-    console.log({ repositories });
-    const res = await fetch(`https://api.github.com/users/${user}/repos?per_page=15`);
+  useEffect(() => {
+    getUserRepositories();
+  }, [userRepository]);
+
+  useEffect(() => {
+    (async function () {
+      const favoriteRepos = await getFavoriteRepos();
+      if (!favoriteRepos) return;
+      setFavorites(favoriteRepos);
+    })();
+  }, []);
+
+  useEffect(() => {
+    (async function () {
+      await saveFavoriteRepo(favorites);
+    })();
+  }, [favorites]);
+
+  const toggleFavorite = (repository: RepositoryObject) => {
+    setFavorites((prevState) =>
+      favorites.some((favoriteRepos) => favoriteRepos.id === repository.id)
+        ? prevState.filter((repos) => repos.id !== repository.id)
+        : [...prevState, repository]
+    );
+  };
+
+  const findFavoriteById = (repoId: string) => favorites.find((favoriteRepo) => favoriteRepo.id === repoId);
+
+  const getUserRepositories = async () => {
+    const res = await fetch(`https://api.github.com/users/${userRepository}/repos?per_page=15`);
     if (!res.ok || res.status >= 400) {
       const body = await res.json();
       throw body.message;
     }
     const body = await res.json();
-    const formatRepositories = body.map((obj: any) => ({
-      starCount: obj.stargazers_count,
-      avatar_url: obj.owner.avatar_url,
-      user: obj.owner.login,
-      repoName: obj.name,
-      ...obj,
-    }));
-    console.log(formatRepositories);
-    setRepositories(formatRepositories);
-  };
 
-  const saveOnFavorite = async (repository: RepositoryObject) => {
-    await saveFavoriteRepo(repository);
+    setRepositories(body);
   };
 
   return (
@@ -59,10 +84,18 @@ export function RepoModalProvider({ children }: UserProviderProps) {
         modalIsVisible,
         setIsModalVisible,
         repositories,
-        getUserRepositories,
+        favorites,
+        setUserRepository,
+        toggleFavorite,
+        findFavoriteById,
       }}
     >
       {children}
+      <ChangeUserRepositoryModal
+        isVisible={modalIsVisible}
+        onClose={() => setIsModalVisible(false)}
+        handleSubmit={setUserRepository}
+      />
     </RepoModalContext.Provider>
   );
 }
